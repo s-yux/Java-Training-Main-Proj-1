@@ -2,9 +2,7 @@ import exceptions.InventoryDepletedException;
 import models.InventoryItem;
 import models.Product;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Runner {
 
@@ -19,11 +17,12 @@ public class Runner {
 
         InventorySystem inventorySystem = new InventorySystem(inventoryItems);
         Scanner sc = new Scanner(System.in);
-        int role, option;
+        String role, option;
         int code, quantity;
-        String name;
+        String name, proceed;
         double price;
-        char proceed;
+        boolean isLoggedIn;
+        Map<String, String> changes = new HashMap<>();
 
         do {
             do {
@@ -31,10 +30,11 @@ public class Runner {
                 System.out.println("Please select your role:");
                 System.out.println("(1) Customer");
                 System.out.println("(2) Staff");
-                role = sc.nextInt();
+                role = sc.nextLine();
             } while (!inventorySystem.isValidRole(role));
 
             if (inventorySystem.currentUser == 1) {
+                isLoggedIn = true;
                 do {
                     System.out.println("Select an option");
                     System.out.println("(1) View Inventory");
@@ -42,13 +42,13 @@ public class Runner {
                     System.out.println("(3) View Shopping Cart");
                     System.out.println("(4) Exit");
 
-                    option = sc.nextInt();
+                    option = sc.nextLine();
 
                     switch (option) {
-                        case 1:
+                        case "1":
                             inventorySystem.displayInventory();
                             break;
-                        case 2:
+                        case "2":
                             do {
                                 System.out.println("Enter Item Code:");
                                 code = sc.nextInt();
@@ -59,26 +59,28 @@ public class Runner {
                                 } catch (InventoryDepletedException e) {
                                     System.out.println(e.getMessage());
                                 } finally {
+                                    sc.nextLine();
                                     System.out.println("Do you want to continue shopping? (y/n)");
-                                    proceed = sc.next().toUpperCase().charAt(0);
+                                    proceed = sc.nextLine();
                                 }
                             } while (inventorySystem.hasMoreItems(proceed));
                             break;
-                        case 3:
+                        case "3":
                             inventorySystem.displayShoppingCart();
                             break;
-                        case 4:
-                            System.out.println("System Terminating...");
-                            System.out.println("Done! Thank You and have a nice day!");
+                        case "4":
+                            isLoggedIn = false;
+                            System.out.println("Thank You and have a nice day!");
                             System.exit(0);
                             break;
                         default:
                             System.out.println("Invalid Option!");
                             break;
                     }
-                } while (inventorySystem.isValidOption(option));
+                } while (!inventorySystem.isValidOption(option) || isLoggedIn);
 
-            } else if (role == 2) {
+            } else if (role.equals("2")) {
+                isLoggedIn = true;
                 do {
                     System.out.println("Select an option");
                     System.out.println("(1) View Inventory");
@@ -87,13 +89,13 @@ public class Runner {
                     System.out.println("(4) Remove InventoryItem");
                     System.out.println("(5) Exit");
 
-                    option = sc.nextInt();
+                    option = sc.nextLine();
 
                     switch (option) {
-                        case 1:
+                        case "1":
                             inventorySystem.displayInventory();
                             break;
-                        case 2:
+                        case "2":
                             System.out.println("Enter item code of product:");
                             code = sc.nextInt();
                             sc.nextLine();
@@ -104,25 +106,60 @@ public class Runner {
                             System.out.println("Enter quantiy of product");
                             quantity = sc.nextInt();
                             inventorySystem.addInventoryItem(code, name, price, quantity);
+                            sc.nextLine();
                             break;
-                        case 3:
-                            inventorySystem.modifyInventoryItem();
+                        case "3":
+                            System.out.println("Enter item code of product:");
+                            code = sc.nextInt();
+                            sc.nextLine();
+                            System.out.println("What do you want to modify?");
+                            System.out.println("(1) Product Name");
+                            System.out.println("(2) Product Price");
+                            System.out.println("(3) Quantity");
+                            option = sc.nextLine();
+                            switch (option) {
+                                case "1":
+                                    System.out.println("Enter new Product Name:");
+                                    name = sc.nextLine();
+                                    changes.put("name", name);
+                                    inventorySystem.modifyInventoryItem(code, changes);
+                                    break;
+                                case "2":
+                                    System.out.println("Enter new Product Price:");
+                                    price = sc.nextDouble();
+                                    changes.put("price", Double.toString(price));
+                                    inventorySystem.modifyInventoryItem(code, changes);
+                                    sc.nextLine();
+                                    break;
+                                case "3":
+                                    System.out.println("Enter new quantity:");
+                                    quantity = sc.nextInt();
+                                    changes.put("quantity", Integer.toString(quantity));
+                                    inventorySystem.modifyInventoryItem(code, changes);
+                                    sc.nextLine();
+                                    break;
+                                default:
+                                    System.out.println("No such field to modify!");
+                                    break;
+                            }
+                            changes.clear();
                             break;
-                        case 4:
+                        case "4":
                             System.out.println("Enter Item Code of Product to remove:");
                             code = sc.nextInt();
                             inventorySystem.removeInventoryItem(code);
+                            sc.nextLine();
                             break;
-                        case 5:
-                            System.out.println("System Terminating...");
-                            System.out.println("Done! Thank You and have a nice day!");
+                        case "5":
+                            isLoggedIn = false;
+                            System.out.println("Thank You and have a nice day!");
                             System.exit(0);
                             break;
                         default:
                             System.out.println("Invalid Option!");
                             break;
                     }
-                } while (inventorySystem.isValidOption(option));
+                } while (!inventorySystem.isValidOption(option) || isLoggedIn);
             }
         } while (true);
     }
