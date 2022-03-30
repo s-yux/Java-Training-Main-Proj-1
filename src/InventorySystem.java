@@ -32,31 +32,17 @@ public class InventorySystem {
         System.out.println("=================================================================");
     }
 
-    public boolean isValidRole(String input) {
+    public boolean isInvalidRole(String input) {
         if (input.equals("1")) {
             currentUser = 1;
-            return true;
+            return false;
         } else if (input.equals("2")) {
             currentUser = 2;
-            return true;
+            return false;
         } else {
-            System.out.println("Invalid input, please try again!");
-            return false;
+            System.out.println("Invalid role, please try again!");
+            return true;
         }
-    }
-
-    public boolean isValidOption(String input) {
-        try {
-            int option = Integer.parseInt(input);
-            if (currentUser == 1 && (option > 0 && option < 4)) {
-                return true;
-            } else if (currentUser == 2 && (option > 0 && option < 5)) {
-                return true;
-            }
-        } catch (NumberFormatException e) {
-            return false;
-        }
-        return false;
     }
 
     public void addInventoryItem(int code, String name, double price, int quantity) throws DuplicateInventoryException {
@@ -79,22 +65,23 @@ public class InventorySystem {
     }
 
     public void modifyInventoryItem(int code, Map<String, String> changes) throws InventoryNotFoundException {
-        InventoryItem temp = getInventoryItemByCode(code);
-        if (temp == null) {
-            throw new InventoryNotFoundException();
+        if (changes.isEmpty()) {
+            System.out.println("No changes to be made!");
         } else {
-            int index = inventoryItems.indexOf(temp);
-            if (changes.containsKey("name")) {
-                temp.product.name = changes.get("name");
-                inventoryItems.set(index, temp);
-            } else if (changes.containsKey("price")) {
-                temp.product.price = Double.parseDouble(changes.get("price"));
-                inventoryItems.set(index, temp);
-            } else if (changes.containsKey("quantity")) {
-                temp.quantity = Integer.parseInt(changes.get("quantity"));
-                inventoryItems.set(index, temp);
+            InventoryItem temp = getInventoryItemByCode(code);
+            if (temp == null) {
+                throw new InventoryNotFoundException();
             } else {
-                System.out.println("No changes to be made!");
+                int index = inventoryItems.indexOf(temp);
+                if (changes.containsKey("name")) {
+                    temp.product.name = changes.get("name");
+                } else if (changes.containsKey("price")) {
+                    temp.product.price = Double.parseDouble(changes.get("price"));
+                } else if (changes.containsKey("quantity")) {
+                    temp.quantity = Integer.parseInt(changes.get("quantity"));
+                }
+                inventoryItems.set(index, temp);
+                System.out.println("Item modified successfully!");
             }
         }
     }
@@ -113,17 +100,21 @@ public class InventorySystem {
         return proceed.charAt(0) == 'Y' || proceed.charAt(0) == 'y';
     }
 
-    public void addToCart(int code, int quantity) throws InventoryDepletedException {
+    public void addToCart(int code, int quantity) throws InventoryDepletedException, InventoryNotFoundException {
         InventoryItem temp = getInventoryItemByCode(code);
-        if (temp.quantity - quantity < 0) {
-            throw new InventoryDepletedException();
+        if (temp == null) {
+            throw new InventoryNotFoundException();
         } else {
-            temp.quantity = temp.quantity - quantity;
-            double totalPrice = Double.parseDouble(df.format(temp.product.price * quantity));
-            ReceiptItem receiptItem = new ReceiptItem(temp.product, quantity, totalPrice);
-            receiptItems.add(receiptItem);
-            displayReceiptItem(receiptItem);
-            System.out.println("Added to Cart!");
+            if (temp.quantity - quantity < 0) {
+                throw new InventoryDepletedException();
+            } else {
+                temp.quantity = temp.quantity - quantity;
+                double totalPrice = Double.parseDouble(df.format(temp.product.price * quantity));
+                ReceiptItem receiptItem = new ReceiptItem(temp.product, quantity, totalPrice);
+                receiptItems.add(receiptItem);
+                displayReceiptItem(receiptItem);
+                System.out.println("Added to Cart!");
+            }
         }
     }
 
@@ -136,16 +127,16 @@ public class InventorySystem {
             System.out.println("Your shopping cart is empty!");
         } else {
             double total = 0.0;
-            System.out.println("======================================================");
+            System.out.println("=======================================================");
             System.out.println("Item Code\t\tItem Name\t\tQuantity\t\tTotal");
-            System.out.println("======================================================");
+            System.out.println("=======================================================");
             for (ReceiptItem x : receiptItems) {
                 displayReceiptItem(x);
                 total += x.totalPrice;
             }
-            System.out.println("======================================================");
+            System.out.println("=======================================================");
             System.out.println("TOTAL: \t\t\t\t\t\t\t\t\t\t\t" + total);
-            System.out.println("======================================================");
+            System.out.println("=======================================================");
         }
     }
 }
