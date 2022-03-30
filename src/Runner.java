@@ -1,4 +1,6 @@
+import exceptions.DuplicateInventoryException;
 import exceptions.InventoryDepletedException;
+import exceptions.InventoryNotFoundException;
 import models.InventoryItem;
 import models.Product;
 
@@ -105,8 +107,13 @@ public class Runner {
                             price = sc.nextDouble();
                             System.out.println("Enter quantiy of product");
                             quantity = sc.nextInt();
-                            inventorySystem.addInventoryItem(code, name, price, quantity);
-                            sc.nextLine();
+                            try {
+                                inventorySystem.addInventoryItem(code, name, price, quantity);
+                            } catch (DuplicateInventoryException e) {
+                                System.out.println(e.getMessage());
+                            } finally {
+                                sc.nextLine();
+                            }
                             break;
                         case "3":
                             System.out.println("Enter item code of product:");
@@ -117,38 +124,49 @@ public class Runner {
                             System.out.println("(2) Product Price");
                             System.out.println("(3) Quantity");
                             option = sc.nextLine();
-                            switch (option) {
-                                case "1":
-                                    System.out.println("Enter new Product Name:");
-                                    name = sc.nextLine();
-                                    changes.put("name", name);
-                                    inventorySystem.modifyInventoryItem(code, changes);
-                                    break;
-                                case "2":
-                                    System.out.println("Enter new Product Price:");
-                                    price = sc.nextDouble();
-                                    changes.put("price", Double.toString(price));
-                                    inventorySystem.modifyInventoryItem(code, changes);
-                                    sc.nextLine();
-                                    break;
-                                case "3":
-                                    System.out.println("Enter new quantity:");
-                                    quantity = sc.nextInt();
-                                    changes.put("quantity", Integer.toString(quantity));
-                                    inventorySystem.modifyInventoryItem(code, changes);
-                                    sc.nextLine();
-                                    break;
-                                default:
-                                    System.out.println("No such field to modify!");
-                                    break;
+
+                            try {
+                                switch (option) {
+                                    case "1":
+                                        System.out.println("Enter new Product Name:");
+                                        name = sc.nextLine();
+                                        changes.put("name", name);
+                                        inventorySystem.modifyInventoryItem(code, changes);
+                                        break;
+                                    case "2":
+                                        System.out.println("Enter new Product Price:");
+                                        price = sc.nextDouble();
+                                        changes.put("price", Double.toString(price));
+                                        inventorySystem.modifyInventoryItem(code, changes);
+                                        sc.nextLine();
+                                        break;
+                                    case "3":
+                                        System.out.println("Enter new quantity:");
+                                        quantity = sc.nextInt();
+                                        changes.put("quantity", Integer.toString(quantity));
+                                        inventorySystem.modifyInventoryItem(code, changes);
+                                        sc.nextLine();
+                                        break;
+                                    default:
+                                        System.out.println("No such field to modify!");
+                                        break;
+                                }
+                            } catch (InventoryNotFoundException e) {
+                                System.out.println(e.getMessage());
+                            } finally {
+                                changes.clear();
                             }
-                            changes.clear();
                             break;
                         case "4":
                             System.out.println("Enter Item Code of Product to remove:");
                             code = sc.nextInt();
-                            inventorySystem.removeInventoryItem(code);
-                            sc.nextLine();
+                            try {
+                                inventorySystem.removeInventoryItem(code);
+                            } catch (InventoryNotFoundException e) {
+                                System.out.println(e.getMessage());
+                            } finally {
+                                sc.nextLine();
+                            }
                             break;
                         case "5":
                             isLoggedIn = false;

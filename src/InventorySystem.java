@@ -1,4 +1,6 @@
+import exceptions.DuplicateInventoryException;
 import exceptions.InventoryDepletedException;
+import exceptions.InventoryNotFoundException;
 import models.InventoryItem;
 import models.Product;
 import models.ReceiptItem;
@@ -57,9 +59,14 @@ public class InventorySystem {
         return false;
     }
 
-    public void addInventoryItem(int code, String name, double price, int quantity) {
-        inventoryItems.add(new InventoryItem(new Product(code, name, price), quantity));
-        System.out.println("Item added successfully!");
+    public void addInventoryItem(int code, String name, double price, int quantity) throws DuplicateInventoryException {
+        InventoryItem temp = getInventoryItemByCode(code);
+        if (temp != null) {
+            throw new DuplicateInventoryException();
+        } else {
+            inventoryItems.add(new InventoryItem(new Product(code, name, price), quantity));
+            System.out.println("Item added successfully!");
+        }
     }
 
     public InventoryItem getInventoryItemByCode(int code) {
@@ -71,10 +78,12 @@ public class InventorySystem {
         return null;
     }
 
-    public void modifyInventoryItem(int code, Map<String, String> changes) {
+    public void modifyInventoryItem(int code, Map<String, String> changes) throws InventoryNotFoundException {
         InventoryItem temp = getInventoryItemByCode(code);
-        int index = inventoryItems.indexOf(temp);
-        if (temp != null) {
+        if (temp == null) {
+            throw new InventoryNotFoundException();
+        } else {
+            int index = inventoryItems.indexOf(temp);
             if (changes.containsKey("name")) {
                 temp.product.name = changes.get("name");
                 inventoryItems.set(index, temp);
@@ -87,14 +96,17 @@ public class InventorySystem {
             } else {
                 System.out.println("No changes to be made!");
             }
-        } else {
-            System.out.println("No such Inventory Item!");
         }
     }
 
-    public void removeInventoryItem(int code) {
-        inventoryItems.removeIf(item -> item.product.code == code);
-        System.out.println("Item removed successfully!");
+    public void removeInventoryItem(int code) throws InventoryNotFoundException {
+        InventoryItem temp = getInventoryItemByCode(code);
+        if (temp == null) {
+            throw new InventoryNotFoundException();
+        } else {
+            inventoryItems.removeIf(item -> item.product.code == code);
+            System.out.println("Item removed successfully!");
+        }
     }
 
     public boolean hasMoreItems(String proceed) {
@@ -120,16 +132,20 @@ public class InventorySystem {
     }
 
     public void displayShoppingCart() {
-        double total = 0.0;
-        System.out.println("======================================================");
-        System.out.println("Item Code\t\tItem Name\t\tQuantity\t\tTotal");
-        System.out.println("======================================================");
-        for (ReceiptItem x : receiptItems) {
-            displayReceiptItem(x);
-            total += x.totalPrice;
+        if (receiptItems.size() == 0) {
+            System.out.println("Your shopping cart is empty!");
+        } else {
+            double total = 0.0;
+            System.out.println("======================================================");
+            System.out.println("Item Code\t\tItem Name\t\tQuantity\t\tTotal");
+            System.out.println("======================================================");
+            for (ReceiptItem x : receiptItems) {
+                displayReceiptItem(x);
+                total += x.totalPrice;
+            }
+            System.out.println("======================================================");
+            System.out.println("TOTAL: \t\t\t\t\t\t\t\t\t\t\t" + total);
+            System.out.println("======================================================");
         }
-        System.out.println("======================================================");
-        System.out.println("TOTAL: \t\t\t\t\t\t\t\t\t\t\t" + total);
-        System.out.println("======================================================");
     }
 }
