@@ -45,6 +45,77 @@ public class InventorySystem {
         }
     }
 
+    public InventoryItem getInventoryItemByCode(int code) {
+        for (InventoryItem x : inventoryItems) {
+            if (x.product.code == code) {
+                return x;
+            }
+        }
+        return null;
+    }
+
+    public void checkValidItemCode(int code) throws InventoryNotFoundException {
+        InventoryItem temp = getInventoryItemByCode(code);
+        if (temp == null) {
+            throw new InventoryNotFoundException();
+        }
+    }
+
+    public void checkDuplicateItemCode(int code) throws DuplicateInventoryException {
+        InventoryItem temp = getInventoryItemByCode(code);
+        if (temp != null) {
+            throw new DuplicateInventoryException();
+        }
+    }
+
+    /* ----------------- Customer Functions ----------------- */
+
+    public void addToCart(int code, int quantity) throws InventoryDepletedException, InventoryNotFoundException {
+        InventoryItem temp = getInventoryItemByCode(code);
+        if (temp == null) {
+            throw new InventoryNotFoundException();
+        } else {
+            if (temp.quantity - quantity < 0) {
+                throw new InventoryDepletedException();
+            } else {
+                temp.quantity = temp.quantity - quantity;
+                double totalPrice = Double.parseDouble(df.format(temp.product.price * quantity));
+                ReceiptItem receiptItem = new ReceiptItem(temp.product, quantity, totalPrice);
+                receiptItems.add(receiptItem);
+                displayReceiptItem(receiptItem);
+                System.out.println("Added to Cart!");
+            }
+        }
+    }
+
+    public boolean hasMoreItems(String proceed) {
+        return proceed.charAt(0) == 'Y' || proceed.charAt(0) == 'y';
+    }
+
+    public void displayReceiptItem(ReceiptItem receiptItem) {
+        System.out.println(receiptItem.product.code + "\t\t\t" + receiptItem.product.name + "\t\t\t" + receiptItem.selectedQty + "\t\t\t\t" + receiptItem.totalPrice);
+    }
+
+    public void displayShoppingCart() {
+        if (receiptItems.size() == 0) {
+            System.out.println("Your shopping cart is empty!");
+        } else {
+            double total = 0.0;
+            System.out.println("=======================================================");
+            System.out.println("Item Code\t\tItem Name\t\tQuantity\t\tTotal");
+            System.out.println("=======================================================");
+            for (ReceiptItem x : receiptItems) {
+                displayReceiptItem(x);
+                total += x.totalPrice;
+            }
+            System.out.println("=======================================================");
+            System.out.println("TOTAL: \t\t\t\t\t\t\t\t\t\t\t" + total);
+            System.out.println("=======================================================");
+        }
+    }
+
+    /* ----------------- Staff Functions ----------------- */
+
     public void addInventoryItem(int code, String name, double price, int quantity) throws DuplicateInventoryException {
         InventoryItem temp = getInventoryItemByCode(code);
         if (temp != null) {
@@ -53,15 +124,6 @@ public class InventorySystem {
             inventoryItems.add(new InventoryItem(new Product(code, name, price), quantity));
             System.out.println("Item added successfully!");
         }
-    }
-
-    public InventoryItem getInventoryItemByCode(int code) {
-        for (InventoryItem x : inventoryItems) {
-            if (x.product.code == code) {
-                return x;
-            }
-        }
-        return null;
     }
 
     public void modifyInventoryItem(int code, Map<String, String> changes) throws InventoryNotFoundException {
@@ -93,50 +155,6 @@ public class InventorySystem {
         } else {
             inventoryItems.removeIf(item -> item.product.code == code);
             System.out.println("Item removed successfully!");
-        }
-    }
-
-    public boolean hasMoreItems(String proceed) {
-        return proceed.charAt(0) == 'Y' || proceed.charAt(0) == 'y';
-    }
-
-    public void addToCart(int code, int quantity) throws InventoryDepletedException, InventoryNotFoundException {
-        InventoryItem temp = getInventoryItemByCode(code);
-        if (temp == null) {
-            throw new InventoryNotFoundException();
-        } else {
-            if (temp.quantity - quantity < 0) {
-                throw new InventoryDepletedException();
-            } else {
-                temp.quantity = temp.quantity - quantity;
-                double totalPrice = Double.parseDouble(df.format(temp.product.price * quantity));
-                ReceiptItem receiptItem = new ReceiptItem(temp.product, quantity, totalPrice);
-                receiptItems.add(receiptItem);
-                displayReceiptItem(receiptItem);
-                System.out.println("Added to Cart!");
-            }
-        }
-    }
-
-    public void displayReceiptItem(ReceiptItem receiptItem) {
-        System.out.println(receiptItem.product.code + "\t\t\t" + receiptItem.product.name + "\t\t\t" + receiptItem.selectedQty + "\t\t\t\t" + receiptItem.totalPrice);
-    }
-
-    public void displayShoppingCart() {
-        if (receiptItems.size() == 0) {
-            System.out.println("Your shopping cart is empty!");
-        } else {
-            double total = 0.0;
-            System.out.println("=======================================================");
-            System.out.println("Item Code\t\tItem Name\t\tQuantity\t\tTotal");
-            System.out.println("=======================================================");
-            for (ReceiptItem x : receiptItems) {
-                displayReceiptItem(x);
-                total += x.totalPrice;
-            }
-            System.out.println("=======================================================");
-            System.out.println("TOTAL: \t\t\t\t\t\t\t\t\t\t\t" + total);
-            System.out.println("=======================================================");
         }
     }
 }
